@@ -1,10 +1,9 @@
-require 'rethinkdb'
 require 'kungfuig'
 
 module Kantox
   module Split
     module Adapters
-      module RethinkDb
+      module FileIo
         extend Kungfuig
 
         def create obj

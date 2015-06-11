@@ -30,4 +30,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rspec', '~> 2.12'
   spec.add_development_dependency 'cucumber', '~> 1.3'
   spec.add_development_dependency 'yard', '~> 0'
+
 end

@@ -22,9 +22,15 @@ module Kantox
         #        into splitted data store, and (optionally) `#to_hash` method,
         #        producing a hash to be splitted and stored.
         def hook default_hooker = nil, **hooks
-          HOOKERS[self] ||= {}
+          HOOKERS[self] ||= { hooker: default_hooker }
           HOOKERS[self].merge!(ACTIONS.map { |a| [a, default_hooker] }.to_h) if default_hooker
           HOOKERS[self].merge!(hooks)
+          if block_given?
+            yielder = Proc.new # reinstantiate &cb
+            HOOKERS[self].values.uniq.each do |h|
+              h.configure(&yielder) if h.respond_to? :configure
+            end
+          end
         end
         def hooks
           klazz = self

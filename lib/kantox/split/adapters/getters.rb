@@ -15,28 +15,33 @@ module Kantox
         #   :has_many    :has_many
         #   :belongs_to  :belongs_to
         #   :has_one     none
-        def as_document for_reflection = [:has_many, :has_one, :belongs_to]
+        def as_document for_reflection = [:has_many, :has_one, :belongs_to], deep = true
           this = self
           refls = reflections.group_by{ |_, v| v.macro }
-          { attributes: attributes }.merge(
+          { attributes: attributes }.merge(deep ?
             [*for_reflection].map do |r|
               next unless refls[r].is_a? Enumerable
               [
                 r,
                 refls[r].map do |rr|
-                  value = this.public_send(rr.first)
-                  [
-                    rr.first,
-                    value.nil? ? nil :  case r
-                                        when :has_many then value.map { |v| v.as_document(r) }
-                                        when :belongs_to then value.as_document(r)
-                                        else value
-                                        end
-                  ]
+                  begin
+                    value = this.public_send(rr.first)
+                    [
+                      rr.first,
+                      value.nil? ? value :  case r
+                                            when :has_many then value.map { |v| v.as_document(r, false) }
+                                            when :belongs_to then value.as_document(r, false)
+                                            else value
+                                            end
+                    ]
+                  rescue StandardError => e
+                    puts "CatchedError :: #{r} :: #{e}"
+                    [ rr.first, e.message ]
+                  end
                 end.to_h
               ]
             end.compact.to_h
-          )
+          : {})
         end
       end
     end
