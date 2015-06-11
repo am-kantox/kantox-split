@@ -4,8 +4,8 @@ require 'kungfuig'
 module Kantox
   module Split
     module Adapters
-      module RethinkDb
-        extend Kungfuig
+      class RethinkDb
+        include Kungfuig
 
         def create obj
           binding.pry if Profile === obj
@@ -18,8 +18,6 @@ module Kantox
         def destroy obj
           puts "[RTDB] ==> DESTROY #{obj}"
         end
-
-        module_function :create, :update, :destroy
       end
     end
   end

@@ -28,7 +28,7 @@ module Kantox
           if block_given?
             yielder = Proc.new # reinstantiate &cb
             HOOKERS[self].values.uniq.each do |h|
-              h.configure(&yielder) if h.respond_to? :configure
+              h.config(&yielder) if h.respond_to? :config
             end
           end
         end
