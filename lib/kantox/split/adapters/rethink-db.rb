@@ -9,7 +9,7 @@ module Kantox
 
         def create obj
           binding.pry if Profile === obj
-          puts "[RTDB] ==> CREATE #{obj.as_document}"
+          puts "[RTDB] ==> CREATE #{obj}"
         end
         def update obj
           binding.pry if Profile === obj
