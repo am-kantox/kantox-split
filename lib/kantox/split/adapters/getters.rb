@@ -18,7 +18,7 @@ module Kantox
         def as_document for_reflection = [:has_many, :has_one, :belongs_to], deep = true, collected = []
           this = self
           refls = reflections.group_by{ |_, v| v.macro }
-          puts "====> REFLS: #{refls}"
+          puts "====> REFLS: #{refls.keys}"
           { attributes: attributes }.merge(deep ?
             [*for_reflection].map do |r|
               next unless refls[r].is_a? Enumerable
@@ -27,24 +27,23 @@ module Kantox
                 refls[r].map do |rr|
                   begin
                     value = this.public_send(rr.first)
-                    collected << value unless deep_pass = collected.include?(value)
+                    collected << value unless already_collected = collected.include?(value)
                     deepers = {
                       has_many: [:has_one, :has_many],
-                      has_one:  [:has_one, :has_many],
+                      has_one:  [:has_one],
                       belongs_to: [:belongs_to]
                     }
                     [
                       rr.first,
-                      value.nil? ? value :  case r
-                                            when :has_many then value.map { |v| v.as_document(deepers[r] & for_reflection, deep && !deep_pass, collected) }
-                                            when :has_one, :belongs_to then value.as_document(deepers[r] & for_reflection, deep && !deep_pass, collected)
-                                            else value
-                                            end
+                      already_collected || value.nil? ? value :
+                          case r
+                          when :has_many then value.map { |v| v.as_document(deepers[r] & for_reflection, deep, collected) }
+                          when :has_one, :belongs_to then value.as_document(deepers[r] & for_reflection, deep, collected)
+                          else value
+                          end
                     ]
                   rescue StandardError => e
                     puts "CatchedError :: #{e} :: #{r} :: #{rr}"
-                    bt = e.backtrace.join("\n\t\t\t")
-                    puts "\t\t\t#{bt}"
                     [ rr.first, "[ERR] :: #{e.message}" ]
                   end
                 end.to_h
