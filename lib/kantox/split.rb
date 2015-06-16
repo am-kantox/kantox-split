@@ -14,13 +14,22 @@ module Kantox
       include Adapters::Getters
 
       include Graph::Vertex
-      edges :reflections
+      edges do |e|
+        e.reflections.values
+      end
+
+      alias_method :child_vertices, :vertices
+      def vertices
+        child_vertices.map do |k, v|
+          [k[:name], v] unless v.nil? || v.respond_to?(:empty?) && v.empty?
+        end.compact.to_h
+      end
     end
 
     class ::ActiveRecord::Reflection::MacroReflection
       include Graph::Edge
       vertex do |o|
-        { type: o.macro, method: o.name, options: o.options, class: o.class }
+        { type: o.macro, name: o.name, method: o.name, options: o.options, class: o.class }
       end
     end
   end
