@@ -35,6 +35,11 @@ module Kantox
         configure_edges do |e|
           e.reflections.values
         end
+        def vertices
+          edges.map do |edge|
+            (edge.options[:class_name] || edge.name.to_s).singularize.camelize.constantize
+          end
+        end
       end
     end
 
@@ -42,13 +47,6 @@ module Kantox
       include Graph::Edge
       configure_vertex do |o|
         { type: o.macro, name: o.name, method: o.name, options: o.options, class: o.class }
-      end
-
-      class << self
-        include Graph::Edge
-        configure_vertex do |o|
-          { type: o.macro, name: o.name, method: o.name, options: o.options, class: o.class }
-        end
       end
     end
   end

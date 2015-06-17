@@ -31,7 +31,7 @@ module Kantox
           #       ...
           #
           def configure_edges parameter = nil, &cb
-            @edges_parameter_getter = parameter || cb
+            store_variable :edges_parameter_getter, parameter || cb
             class_eval do
               def edges
                 lookup_variable_value lookup_variable :edges_parameter_getter
@@ -53,7 +53,7 @@ module Kantox
 
         module ClassMethods
           def configure_vertex parameter = nil, &cb
-            @vertex_parameter_getter = parameter || cb
+            store_variable :vertex_parameter_getter, parameter || cb
             class_eval do
               def vertex
                 lookup_variable_value lookup_variable :vertex_parameter_getter
