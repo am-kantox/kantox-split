@@ -10,11 +10,13 @@ module Kantox
       hook Adapters::RethinkDb.new do |c|
         c.merge! host: '127.0.0.1', port: 28015, db: 'test'
       end
-
       include Adapters::Getters
 
+      ##########################################################################
+      #### Graph for instances
+      ##########################################################################
       include Graph::Vertex
-      edges do |e|
+      configure_edges do |e|
         e.reflections.values
       end
 
@@ -24,12 +26,29 @@ module Kantox
           [k[:name], v] unless v.nil? || v.respond_to?(:empty?) && v.empty?
         end.compact.to_h
       end
+
+      ##########################################################################
+      #### Graph for classes
+      ##########################################################################
+      class << self
+        include Graph::Vertex
+        configure_edges do |e|
+          e.reflections.values
+        end
+      end
     end
 
     class ::ActiveRecord::Reflection::MacroReflection
       include Graph::Edge
-      vertex do |o|
+      configure_vertex do |o|
         { type: o.macro, name: o.name, method: o.name, options: o.options, class: o.class }
+      end
+
+      class << self
+        include Graph::Edge
+        configure_vertex do |o|
+          { type: o.macro, name: o.name, method: o.name, options: o.options, class: o.class }
+        end
       end
     end
   end

@@ -15,7 +15,7 @@ module Kantox
           when Array then getter.map { |v| lookup_variable_value object, v }
           when Hash then getter.map { |k, v| [k, lookup_variable_value(object, v)] }.to_h
           when ->(p) { p.respond_to? :to_proc } then getter.to_proc.call(object)
-          else raise ArgumentError.new "Expected Array, Hash, String, Symbol or Proc. Got: #{parameter.class}"
+          else raise ArgumentError.new "Expected Array, Hash, String, Symbol or Proc. Got: #{getter.class}"
           end
         end
       end

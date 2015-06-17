@@ -30,7 +30,7 @@ module Kantox
           #       edges :reflections # the parameter must be Enumerable
           #       ...
           #
-          def edges parameter = nil, &cb
+          def configure_edges parameter = nil, &cb
             @edges_parameter_getter = parameter || cb
             class_eval do
               def edges
@@ -52,7 +52,7 @@ module Kantox
         end
 
         module ClassMethods
-          def vertex parameter = nil, &cb
+          def configure_vertex parameter = nil, &cb
             @vertex_parameter_getter = parameter || cb
             class_eval do
               def vertex
@@ -77,6 +77,7 @@ module Kantox
         def tree
           vertices.inject({}) do |memo, v|
             memo[v] = { vertex: v }
+
             memo
           end
         end
