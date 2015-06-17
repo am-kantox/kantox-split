@@ -37,8 +37,8 @@ module Kantox
         end
         def vertices
           edges.map do |edge|
-            (edge.options[:class_name] || edge.name.to_s).singularize.camelize.constantize
-          end
+            [edge[:name], (edge.options[:class_name] || edge.name.to_s).singularize.camelize.constantize]
+          end.to_h
         end
       end
     end
