@@ -34,11 +34,7 @@ module Kantox
             @edges_parameter_getter = parameter || cb
             class_eval do
               def edges
-                case parameter = lookup_variable(:edges_parameter_getter)
-                when Symbol, String then public_send parameter
-                when ->(p) { p.respond_to? :to_proc } then parameter.to_proc.call(self)
-                else raise ArgumentError.new "Expected String, Symbol or Proc. Got: #{parameter.class}"
-                end
+                lookup_variable_value lookup_variable :edges_parameter_getter
               end
             end
           end
@@ -60,27 +56,15 @@ module Kantox
             @vertex_parameter_getter = parameter || cb
             class_eval do
               def vertex
-                @vertex ||= case parameter = lookup_variable(:vertex_parameter_getter)
-                            when Symbol, String then public_send parameter
-                            when ->(p) { p.respond_to? :to_proc } then parameter.to_proc.call(self)
-                            else raise ArgumentError.new "Expected String, Symbol or Proc. Got: #{parameter.class}"
-                            end
+                lookup_variable_value lookup_variable :vertex_parameter_getter
               end
 
               def vertex_getter
                 v = (vtx = vertex).is_a?(Hash) ? vtx[:method] || vtx[:lambda] : vtx
-                @vertex_getter ||=  lambda do |vertex|
-                                      return if [:todos].include? v # FIXME UGLY HACK
-                                      [
-                                        vtx,
-
-                                        case v
-                                        when Symbol, String then vertex.public_send(v)
-                                        when ->(p) { p.respond_to? :to_proc } then v.to_proc.call(vertex)
-                                        else raise ArgumentError.new "Vertex lambda is to be String, Symbol or Proc. Got: #{parameter.class}"
-                                        end
-                                      ]
-                                    end
+                lambda do |vertex|
+                  return if [:todos].include? v # FIXME UGLY HACK
+                  [ vtx, Utils.lookup_variable_value(vertex, v) ]
+                end
               end
             end
           end
