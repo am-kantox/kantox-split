@@ -21,17 +21,6 @@ module Kantox
       end
       configure_embedded :attributes
 
-      def to_h
-        { attributes: embedded, children: vertices }
-      end
-
-      alias_method :child_vertices, :vertices
-      def vertices
-        child_vertices.map do |k, v|
-          [k[:name], v] unless v.nil? || v.respond_to?(:empty?) && v.empty?
-        end.compact.to_h
-      end
-
       ##########################################################################
       #### Graph for classes
       ##########################################################################

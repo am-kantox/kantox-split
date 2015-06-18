@@ -27,13 +27,31 @@ module Kantox
         end
 
         module InstanceMethods
+          def leaf?
+            edges.empty?
+          end
+
           def vertices
             return [] unless respond_to? :edges
             edges.map do |edge|
               next unless edge.respond_to? :vertex_getter
               next unless (cb = edge.vertex_getter).respond_to? :call
-              cb.call(self)
+              cb.call(self) rescue nil
             end.compact
+          end
+
+          def graph_node_id
+            "#{self.class}::#{respond_to?(:id) ? id : __id__}"
+          end
+
+          def to_h levels = 1, collected = []
+            (respond_to?(:embedded) && embedded || {}).merge(
+              vertices.map do |k, v|
+                next if v.nil? || v.respond_to?(:empty?) && v.empty?
+                [k[:name], collected.include?(v) ? "∃#{v.respond_to?(:graph_node_id) ? v.graph_node_id : v.__id__}" :
+                                                    levels > 0 && v.respond_to?(:to_h) ? v.to_h(levels - 1, collected << v) : v]
+              end.compact.to_h
+            )
           end
         end
 
@@ -41,8 +59,8 @@ module Kantox
           # to be called as:
           #
           #     class ActiveRecord::Base
-          #       include Kantox::Split::Graph
-          #       edges :reflections # the parameter must be Enumerable
+          #       include Kantox::Split::Graph::Vertex
+          #       configure_edges :reflections # the parameter must be Enumerable
           #       ...
           #
           def configure_edges parameter = nil, &cb
@@ -78,8 +96,9 @@ module Kantox
               def vertex_getter
                 v = (vtx = vertex).is_a?(Hash) ? vtx[:method] || vtx[:lambda] : vtx
                 lambda do |vertex|
-                  return if [:todos].include? v # FIXME UGLY HACK
-                  [ vtx, Utils.lookup_variable_value(vertex, v) ]
+                  unless [:todos].include? v # FIXME UGLY HACK
+                    [ vtx, Utils.lookup_variable_value(vertex, v) ]
+                  end
                 end
               end
             end
@@ -87,15 +106,13 @@ module Kantox
         end
       end
       ##########################################################################
-      module Root
-        include Vertex
+      def self.tree root, depth = -1
+        return nil unless root.respond_to? :vertices
 
-        def tree
-          vertices.inject({}) do |memo, v|
-            memo[v] = { vertex: v }
+        root.vertices.inject({}) do |memo, v|
+          memo[v] = { vertex: v }
 
-            memo
-          end
+          memo
         end
       end
     end
