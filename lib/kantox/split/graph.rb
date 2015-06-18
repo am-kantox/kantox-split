@@ -3,6 +3,17 @@ require 'kantox/split/utils'
 module Kantox
   module Split
     module Graph
+      CONFIGURE_EVALUATOR = <<-EOCFGEV
+        def configure_%{entity} parameter = nil, &cb
+          store_variable :graph_%{entity}_getter, parameter || cb
+          class_eval do
+            def %{entity}
+              lookup_variable_value lookup_variable :graph_%{entity}_getter
+            end
+          end
+        end
+      EOCFGEV
+
       ##########################################################################
       module Attributed
         include Kantox::Split::Utils
@@ -34,17 +45,15 @@ module Kantox
           def vertices
             return [] unless respond_to? :edges
             edges.map do |edge|
-              next unless edge.respond_to? :vertex_getter
-              next unless (cb = edge.vertex_getter).respond_to? :call
-              cb.call(self) rescue nil
+              edge.vertex_getter.call self rescue nil
             end.compact
           end
 
           def graph_node_id
-            "#{self.class}::#{respond_to?(:id) ? id : __id__}"
+            ["#{self.class}", "#{schild rescue nil}", "#{id rescue nil}"].reject(&:empty?).join '::'
           end
 
-          def to_h levels = 1, collected = []
+          def to_h levels = 0, collected = []
             (respond_to?(:embedded) && embedded || {}).merge(
               vertices.map do |k, v|
                 next if v.nil? || v.respond_to?(:empty?) && v.empty?
@@ -63,13 +72,8 @@ module Kantox
           #       configure_edges :reflections # the parameter must be Enumerable
           #       ...
           #
-          def configure_edges parameter = nil, &cb
-            store_variable :edges_parameter_getter, parameter || cb
-            class_eval do
-              def edges
-                lookup_variable_value lookup_variable :edges_parameter_getter
-              end
-            end
+          %i(edges schild).each do |entity|
+            module_eval CONFIGURE_EVALUATOR % { entity: entity }
           end
         end
       end
@@ -83,25 +87,20 @@ module Kantox
         end
 
         module InstanceMethods
+          def vertex_getter
+            return nil unless respond_to? :vertex
+            v = (vtx = vertex).is_a?(Hash) ? vtx[:method] || vtx[:lambda] : vtx
+            lambda do |vertex|
+              unless [:todos].include? v # FIXME UGLY HACK
+                [ vtx, Utils.lookup_variable_value(vertex, v) ]
+              end
+            end
+          end
         end
 
         module ClassMethods
-          def configure_vertex parameter = nil, &cb
-            store_variable :vertex_parameter_getter, parameter || cb
-            class_eval do
-              def vertex
-                lookup_variable_value lookup_variable :vertex_parameter_getter
-              end
-
-              def vertex_getter
-                v = (vtx = vertex).is_a?(Hash) ? vtx[:method] || vtx[:lambda] : vtx
-                lambda do |vertex|
-                  unless [:todos].include? v # FIXME UGLY HACK
-                    [ vtx, Utils.lookup_variable_value(vertex, v) ]
-                  end
-                end
-              end
-            end
+          %i(vertex).each do |entity|
+            module_eval CONFIGURE_EVALUATOR % { entity: entity }
           end
         end
       end

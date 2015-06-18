@@ -19,7 +19,8 @@ module Kantox
           case getter
           when Array then getter.map { |v| lookup_variable_value object, v }
           when Hash then getter.map { |k, v| [k, lookup_variable_value(object, v)] }.to_h
-          when Symbol, String then object.public_send(getter) rescue nil
+          when String then object.instance_eval(getter) rescue nil 
+          when Symbol then object.public_send(getter) rescue nil
           when ->(p) { p.respond_to? :to_proc } then getter.to_proc.call(object) rescue nil
           else raise ArgumentError.new "Expected Array, Hash, String, Symbol or Proc. Got: #{getter.class}"
           end

@@ -20,6 +20,7 @@ module Kantox
         e.reflections.values
       end
       configure_embedded :attributes
+      configure_schild %i(name caption label).map{ |field| "respond_to?(:#{field}) && #{field}" }.join(' || ') + " || ''"
 
       ##########################################################################
       #### Graph for classes
