@@ -42,7 +42,7 @@ module Kantox
 
             edge_singular = (edge.options[:class_name] || edge.name.to_s).singularize.camelize
             edge_singular += 's' if edge_singular[-2..-1] == 'es' # Fuck Rails
-            edge && [edge.name, edge_singular] # (edge_singular.constantize rescue edge_singular)]
+            edge && [edge.name, (edge_singular.constantize rescue edge_singular)]
           end.compact.to_h
         end
         def to_h levels = 0, collected = []
