@@ -51,7 +51,9 @@ module Kantox
           end
 
           def graph_node_id
-            ["#{self.class}", "#{schild rescue nil}", "#{id rescue nil}"].reject(&:empty?).join '::'
+            label = schild if respond_to?(:schild)
+            label = label.empty? ? self.class.name : "\"#{label}\": #{self.class.name}"
+            "#{label} «#{id rescue nil}»"
           end
 
           def to_h levels = 0, collected = []
@@ -64,11 +66,11 @@ module Kantox
             )
           end
 
-          def to_graph levels = 0, g = RGL::DirectedAdjacencyGraph.new, root = self
+          def to_graph levels = 0, g = RGL::DirectedAdjacencyGraph.new, root = self.graph_node_id
             vertices.each do |k, v|
               next if v.nil? || v.respond_to?(:empty?) && v.empty?
-              next unless v.respond_to? :schild
-              g.add_edge(root, vtx = v.schild)
+              next unless v.is_a? Vertex
+              g.add_edge(root, vtx = v.graph_node_id)
               v.to_graph(levels - 1, g, vtx) if levels > 0 && v.respond_to?(:to_graph)
             end
             g
