@@ -19,6 +19,11 @@ module Kantox
       configure_edges do |e|
         e.reflections.values
       end
+      configure_embedded :attributes
+
+      def to_h
+        { attributes: embedded, children: vertices }
+      end
 
       alias_method :child_vertices, :vertices
       def vertices
@@ -37,8 +42,11 @@ module Kantox
         end
         def vertices
           edges.map do |edge|
-            [edge[:name], (edge.options[:class_name] || edge.name.to_s).singularize.camelize.constantize]
+            [edge.name, (edge.options[:class_name] || edge.name.to_s).singularize.camelize.constantize]
           end.to_h
+        end
+        def to_h
+          vertices
         end
       end
     end

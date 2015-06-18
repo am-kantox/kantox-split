@@ -4,9 +4,24 @@ module Kantox
   module Split
     module Graph
       ##########################################################################
+      module Attributed
+        include Kantox::Split::Utils
+        module ClassMethods
+          def configure_embedded parameter = nil, &cb
+            store_variable :embedded_parameter_getter, parameter || cb
+            class_eval do
+              def embedded
+                lookup_variable_value lookup_variable :embedded_parameter_getter
+              end
+            end
+          end
+        end
+      end
+      ##########################################################################
       module Vertex
         def self.included base
           base.include Kantox::Split::Utils
+          base.extend Attributed::ClassMethods
           base.include InstanceMethods
           base.extend ClassMethods
         end
@@ -44,6 +59,7 @@ module Kantox
       module Edge
         def self.included base
           base.include Kantox::Split::Utils
+          base.extend Attributed::ClassMethods
           base.include InstanceMethods
           base.extend ClassMethods
         end
