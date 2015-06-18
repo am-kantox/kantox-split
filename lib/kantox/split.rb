@@ -32,8 +32,11 @@ module Kantox
         end
         def vertices
           edges.map do |edge|
-            [edge.name, (edge.options[:class_name] || edge.name.to_s).singularize.camelize.constantize]
-          end.to_h
+            while edge && edge.options[:through] do
+              edge = edges.detect { |e| e.name == edge.options[:through] }
+            end
+            edge && [edge.name, (edge.options[:class_name] || edge.name.to_s).singularize.camelize.constantize]
+          end.compact.to_h
         end
         def to_h
           vertices
