@@ -32,6 +32,8 @@ module Kantox
         configure_edges do |e|
           e.reflections.values
         end
+        configure_schild :name
+        
         def vertices
           edges.map do |edge|
             next [edge.name, ::ActiveRecord::Base] if edge.options[:polymorphic]

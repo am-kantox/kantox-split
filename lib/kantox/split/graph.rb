@@ -1,4 +1,5 @@
 require 'kantox/split/utils'
+require 'rgl/adjacency'
 
 module Kantox
   module Split
@@ -61,6 +62,16 @@ module Kantox
                                                     levels > 0 && v.respond_to?(:to_h) ? v.to_h(levels - 1, collected << v) : v]
               end.compact.to_h
             )
+          end
+
+          def to_graph levels = 0, g = RGL::DirectedAdjacencyGraph.new, root = self
+            vertices.each do |k, v|
+              next if v.nil? || v.respond_to?(:empty?) && v.empty?
+              next unless v.respond_to? :schild
+              g.add_edge(root, vtx = v.schild)
+              v.to_graph(levels - 1, g, vtx) if levels > 0 && v.respond_to?(:to_graph)
+            end
+            g
           end
         end
 
