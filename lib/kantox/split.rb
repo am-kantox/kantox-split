@@ -33,7 +33,7 @@ module Kantox
           e.reflections.values
         end
         configure_schild :name
-        
+
         def vertices
           edges.map do |edge|
             next [edge.name, ::ActiveRecord::Base] if edge.options[:polymorphic]
@@ -44,12 +44,14 @@ module Kantox
 
             edge_singular = (edge.options[:class_name] || edge.name.to_s).singularize.camelize
             edge_singular += 's' if edge_singular[-2..-1] == 'es' # Fuck Rails
-            edge && [edge.name, (edge_singular.constantize rescue edge_singular)]
+            vtx = edge_singular.constantize rescue edge_singular
+            edge && [edge.name, edge.macro == :has_many ? [vtx] : vtx]
           end.compact.to_h
         end
         def to_h levels = 0, collected = []
           vertices.map do |k, v|
-            [k, !collected.include?(v) && levels > 0 && v.respond_to?(:to_h) ? { v => v.to_h(levels - 1, collected << v) } : v]
+            v_deep = Kantox::Split::Utils.omnivorous_to_h v, levels, collected
+            [k, v == v_deep ? v : { v => v_deep }]
           end.to_h
         end
       end
@@ -58,7 +60,7 @@ module Kantox
     class ::ActiveRecord::Reflection::MacroReflection
       include Graph::Edge
       configure_vertex do |o|
-        { type: o.macro, name: o.name, method: o.name, options: o.options, class: o.class }
+        { macro: o.macro, name: o.name, method: o.name, options: o.options, class: o.class }
       end
     end
   end

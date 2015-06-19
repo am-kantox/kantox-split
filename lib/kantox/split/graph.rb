@@ -60,8 +60,7 @@ module Kantox
             (respond_to?(:embedded) && embedded || {}).merge(
               vertices.map do |k, v|
                 next if v.nil? || v.respond_to?(:empty?) && v.empty?
-                [k[:name], collected.include?(v) ? "∃#{v.respond_to?(:graph_node_id) ? v.graph_node_id : v.__id__}" :
-                                                    levels > 0 && v.respond_to?(:to_h) ? v.to_h(levels - 1, collected << v) : v]
+                [k[:name], Kantox::Split::Utils.omnivorous_to_h(v, levels, collected, 'obj.respond_to?(:graph_node_id) ? obj.graph_node_id : obj.__id__')]
               end.compact.to_h
             )
           end
@@ -69,7 +68,7 @@ module Kantox
           def to_graph levels = 0, g = RGL::DirectedAdjacencyGraph.new, root = self.graph_node_id
             vertices.each do |k, v|
               next if v.nil? || v.respond_to?(:empty?) && v.empty?
-              next unless v.is_a? Vertex
+              next unless v.is_a? Vertex # FIXME ARRAY
               g.add_edge(root, vtx = v.graph_node_id)
               v.to_graph(levels - 1, g, vtx) if levels > 0 && v.respond_to?(:to_graph)
             end

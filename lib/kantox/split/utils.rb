@@ -19,11 +19,27 @@ module Kantox
           case getter
           when Array then getter.map { |v| lookup_variable_value object, v }
           when Hash then getter.map { |k, v| [k, lookup_variable_value(object, v)] }.to_h
-          when String then object.instance_eval(getter) rescue nil 
+          when String then object.instance_eval(getter) rescue nil
           when Symbol then object.public_send(getter) rescue nil
           when ->(p) { p.respond_to? :to_proc } then getter.to_proc.call(object) rescue nil
           else raise ArgumentError.new "Expected Array, Hash, String, Symbol or Proc. Got: #{getter.class}"
           end
+        end
+
+        def omnivorous_to_h obj, levels = 1, collected = [], default = nil
+          return default ? "∃#{instance_eval(default)}" : obj if collected.include? obj
+
+          collected << obj
+
+          levels < 0 ?  obj :
+                        case obj
+                        when Array
+                          obj.map { |e| omnivorous_to_h e, levels, collected, default }
+                        when ->(o) { o.methods.include?(:to_h) && o.method(:to_h).parameters.map(&:first) == [:opt, :opt] }
+                          obj.to_h levels - 1, collected
+                        else
+                          obj
+                        end
         end
       end
 
