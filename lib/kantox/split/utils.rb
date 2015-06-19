@@ -29,14 +29,12 @@ module Kantox
         def omnivorous_to_h obj, levels = 1, collected = [], default = nil
           return default ? "∃#{instance_eval(default)}" : obj if collected.include? obj
 
-          collected << obj
-
           levels < 0 ?  obj :
                         case obj
                         when Array
                           obj.map { |e| omnivorous_to_h e, levels, collected, default }
                         when ->(o) { o.methods.include?(:to_h) && o.method(:to_h).parameters.map(&:first) == [:opt, :opt] }
-                          obj.to_h levels - 1, collected
+                          obj.to_h levels - 1, collected << obj
                         else
                           obj
                         end
