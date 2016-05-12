@@ -22,8 +22,8 @@ Gem::Specification.new do |spec|
 #    spec.metadata['allowed_push_host'] = "TODO: FURY"
   end
 
-  spec.add_dependency 'rethinkdb', '~> 2.0'
   spec.add_dependency 'rgl', '~> 0.5'
+  spec.add_dependency 'kungfuig', '~> 0'
 
   spec.add_development_dependency 'bundler', '~> 1.7'
   spec.add_development_dependency 'rake', '~> 10.0'
